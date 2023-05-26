@@ -35,17 +35,23 @@ void openGUI()
         {},
         {},
         {},
-        {}
+        {},
+        false,
+        false
     };
 
+    bool eventProcessing = false;
     while (!retFSM.exitCon) 
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        SDL_Event eventQueue[10]; SDL_PeepEvents(eventQueue, 10, SDL_PEEKEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT);
+        while (!eventProcessing && SDL_PollEvent(&event))
         {
+            eventProcessing = true;
             retFSM = screenFSM(&event, window, renderer, retFSM);
+            eventProcessing = false;
+            SDL_Delay(DELAY_TIME); // Sleep for a short time to avoid hogging the CPU
         }
-        SDL_Delay(DELAY_TIME); // Sleep for a short time to avoid hogging the CPU
     }
 
     SDL_DestroyRenderer(renderer);
@@ -112,11 +118,11 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
             break;
 
             case screenState::TYPE:
-                // Filter Type Static (Low, High, Band, Notch)
+                // Filter Type Static (Low, High, Band, Notch, State)
                 switch (retFSM.typeSel)
                 {
                     case typeState::LOW:
-                        if (event->key.keysym.sym == SDLK_DOWN)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::HIGH;
                             retFSM.currScreen = screenState::TYPE_REND;
@@ -124,12 +130,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case typeState::HIGH:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::LOW;
                             retFSM.currScreen = screenState::TYPE_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::BAND;
                             retFSM.currScreen = screenState::TYPE_REND;
@@ -137,12 +143,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case typeState::BAND:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::HIGH;
                             retFSM.currScreen = screenState::TYPE_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::NOTCH;
                             retFSM.currScreen = screenState::TYPE_REND;
@@ -150,12 +156,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case typeState::NOTCH:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::BAND;
                             retFSM.currScreen = screenState::TYPE_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::STATE;
                             retFSM.currScreen = screenState::TYPE_REND;
@@ -163,7 +169,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case typeState::STATE:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.typeSel = typeState::NOTCH;
                             retFSM.currScreen = screenState::TYPE_REND;
@@ -245,7 +251,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                 switch (retFSM.topSel)
                 {
                     case topState::TWIN:
-                        if (event->key.keysym.sym == SDLK_DOWN)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.topSel = topState::MFB;
                             retFSM.currScreen = screenState::TOPOLOGY_REND;
@@ -253,12 +259,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case topState::MFB:
-                        if (event->key.keysym.sym == SDLK_UP && retFSM.typeSel == typeState::NOTCH)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED && retFSM.typeSel == typeState::NOTCH)
                         {
                             retFSM.topSel = topState::TWIN;
                             retFSM.currScreen = screenState::TOPOLOGY_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.topSel = topState::SK;
                             retFSM.currScreen = screenState::TOPOLOGY_REND;
@@ -266,7 +272,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case topState::SK:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.topSel = topState::MFB;
                             retFSM.currScreen = screenState::TOPOLOGY_REND;
@@ -332,7 +338,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                 switch (retFSM.catSel)
                 {
                     case catState::BUTT:
-                        if (event->key.keysym.sym == SDLK_DOWN)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::CHEB1;
                             retFSM.currScreen = screenState::CATEGORY_REND;
@@ -340,12 +346,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case catState::CHEB1:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::BUTT;
                             retFSM.currScreen = screenState::CATEGORY_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::CHEB2;
                             retFSM.currScreen = screenState::CATEGORY_REND;
@@ -353,12 +359,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case catState::CHEB2:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::CHEB1;
                             retFSM.currScreen = screenState::CATEGORY_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::BESL;
                             retFSM.currScreen = screenState::CATEGORY_REND;
@@ -366,12 +372,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case catState::BESL:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::CHEB2;
                             retFSM.currScreen = screenState::CATEGORY_REND;
                         }
-                        else if (event->key.keysym.sym == SDLK_DOWN)
+                        else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::ELIP;
                             retFSM.currScreen = screenState::CATEGORY_REND;
@@ -379,7 +385,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     break;
 
                     case catState::ELIP:
-                        if (event->key.keysym.sym == SDLK_UP)
+                        if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                         {
                             retFSM.catSel = catState::BESL;
                             retFSM.currScreen = screenState::CATEGORY_REND;
@@ -416,7 +422,34 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
 
             case screenState::CHARACTERISTICS_REND:
                 // Filter Characteristics Render(Gain, Cut Off)
-                retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.charSel);
+                if (retFSM.catSel == catState::BUTT)
+                {
+                    if(retFSM.charSel == charState::STOPBAND || retFSM.charSel == charState::MAXOSC || retFSM.charSel == charState::STOPBANDATT)
+                    {
+                        retFSM.charSel = charState::GAIN;
+                    }
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):"}, retFSM.charSubmitClicked);
+                }
+                else if (retFSM.catSel == catState::CHEB1)
+                {
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Passband Cut-Off Frequency(Hz):", "Stopband Cut-Off Frequency(Hz):", "Max Passband Oscillation(dB):", "Stopband Attenuation:"}, retFSM.charSubmitClicked);
+                }
+                else if (retFSM.catSel == catState::CHEB2)
+                {
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Passband Cut-Off Frequency(Hz):", "Stopband Cut-Off Frequency(Hz):", "Max Stopband Oscillation(dB):", "Stopband Attenuation:"}, retFSM.charSubmitClicked);
+                }
+                else if(retFSM.catSel == catState::BESL)
+                {
+                    if(retFSM.charSel == charState::STOPBAND || retFSM.charSel == charState::MAXOSC || retFSM.charSel == charState::STOPBANDATT)
+                    {
+                        retFSM.charSel = charState::GAIN;
+                    }
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):"}, retFSM.charSubmitClicked);
+                }
+                else if(retFSM.catSel == catState::ELIP)
+                {
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"???"}, retFSM.charSubmitClicked);
+                }
                 retFSM.currScreen = screenState::CHARACTERISTICS;
             break;
 
@@ -425,12 +458,12 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                 switch (retFSM.charSel)
                 {
                 case charState::GAIN:
-                    if (event->key.keysym.sym == SDLK_DOWN)
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                     {
                         retFSM.charSel = charState::CUTOFF;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
-                    else if (event->type == SDL_KEYDOWN)
+                    else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
                     {
                         // Get the name of the pressed key
                         const char* keyName = SDL_GetKeyName(event->key.keysym.sym);
@@ -473,14 +506,20 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                                 retFSM.charRet.ui.gain.pop_back();
                             }
                         }
+                        retFSM.charChangeMade = true;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
 
                 case charState::CUTOFF:
-                    if (event->key.keysym.sym == SDLK_UP)
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                     {
                         retFSM.charSel = charState::GAIN;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED && (retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::CHEB2 || retFSM.catSel == catState::ELIP))
+                    {
+                        retFSM.charSel = charState::STOPBAND;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
@@ -526,6 +565,176 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                                 retFSM.charRet.ui.cutoffFrequency.pop_back();
                             }
                         }
+                        retFSM.charChangeMade = true;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    break;
+                case charState::STOPBAND:
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::CUTOFF;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::MAXOSC;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
+                    {
+                        // Get the name of the pressed key
+                        const char* keyName = SDL_GetKeyName(event->key.keysym.sym);
+
+                        // Check if the key name corresponds to a digit from the numpad
+                        if (strncmp(keyName, "Keypad ", 7) == 0 && isdigit(keyName[7]))
+                        {
+                            char digit = keyName[7];
+                            // Handle text input events
+                            if (retFSM.charRet.ui.stopbandFrequency == "0")
+                            {
+                                retFSM.charRet.ui.stopbandFrequency = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandFrequency += digit;
+                            }
+                        }
+                        else if (isdigit(keyName[0]))
+                        {
+                            char digit = static_cast<char>(event->key.keysym.sym);
+                            // Handle text input events
+                            if (retFSM.charRet.ui.stopbandFrequency == "0")
+                            {
+                                retFSM.charRet.ui.stopbandFrequency = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandFrequency += digit;
+                            }
+                        }
+                        else if (event->key.keysym.sym == SDLK_BACKSPACE)
+                        {
+                            if (retFSM.charRet.ui.stopbandFrequency.length() == 1)
+                            {
+                                retFSM.charRet.ui.stopbandFrequency = "0";
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandFrequency.pop_back();
+                            }
+                        }
+                        retFSM.charChangeMade = true;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    break;
+                case charState::MAXOSC:
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::STOPBAND;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::STOPBANDATT;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
+                    {
+                        // Get the name of the pressed key
+                        const char* keyName = SDL_GetKeyName(event->key.keysym.sym);
+
+                        // Check if the key name corresponds to a digit from the numpad
+                        if (strncmp(keyName, "Keypad ", 7) == 0 && isdigit(keyName[7]))
+                        {
+                            char digit = keyName[7];
+                            // Handle text input events
+                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            {
+                                retFSM.charRet.ui.maxOscillation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation += digit;
+                            }
+                        }
+                        else if (isdigit(keyName[0]))
+                        {
+                            char digit = static_cast<char>(event->key.keysym.sym);
+                            // Handle text input events
+                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            {
+                                retFSM.charRet.ui.maxOscillation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation += digit;
+                            }
+                        }
+                        else if (event->key.keysym.sym == SDLK_BACKSPACE)
+                        {
+                            if (retFSM.charRet.ui.maxOscillation.length() == 1)
+                            {
+                                retFSM.charRet.ui.maxOscillation = "0";
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation.pop_back();
+                            }
+                        }
+                        retFSM.charChangeMade = true;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    break;
+                case charState::STOPBANDATT:
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::MAXOSC;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
+                    {
+                        // Get the name of the pressed key
+                        const char* keyName = SDL_GetKeyName(event->key.keysym.sym);
+
+                        // Check if the key name corresponds to a digit from the numpad
+                        if (strncmp(keyName, "Keypad ", 7) == 0 && isdigit(keyName[7]))
+                        {
+                            char digit = keyName[7];
+                            // Handle text input events
+                            if (retFSM.charRet.ui.stopbandAttentuation == "0")
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation += digit;
+                            }
+                        }
+                        else if (isdigit(keyName[0]))
+                        {
+                            char digit = static_cast<char>(event->key.keysym.sym);
+                            // Handle text input events
+                            if (retFSM.charRet.ui.stopbandAttentuation == "0")
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation += digit;
+                            }
+                        }
+                        else if (event->key.keysym.sym == SDLK_BACKSPACE)
+                        {
+                            if (retFSM.charRet.ui.stopbandAttentuation.length() == 1)
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation = "0";
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.stopbandAttentuation.pop_back();
+                            }
+                        }
+                        retFSM.charChangeMade = true;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
@@ -543,8 +752,25 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     // Submit button clicked
                     shared.cutOff = std::stoi(retFSM.charRet.ui.cutoffFrequency);
                     shared.gain = std::stoi(retFSM.charRet.ui.gain);
-                    deallocateCharResources(retFSM.charRet);
-                    retFSM.currScreen = screenState::GENERATING_REND;
+                    if(retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::CHEB2 || retFSM.catSel == catState::ELIP)
+                    {
+                        shared.stopFreq = std::stoi(retFSM.charRet.ui.stopbandFrequency);
+	                    shared.maxOsc = std::stoi(retFSM.charRet.ui.maxOscillation);
+	                    shared.stopAtt = std::stoi(retFSM.charRet.ui.stopbandAttentuation);
+                        orderCheby1Calc();
+                        if(!retFSM.charSubmitClicked)
+                        {
+                            retFSM.charSubmitClicked = true;
+                        }
+                        else if(retFSM.charSubmitClicked && retFSM.charRet.confirmShown && !retFSM.charChangeMade)
+                        {
+                            deallocateCharResources(retFSM.charRet, retFSM.catSel);
+                            retFSM.currScreen = screenState::GENERATING_REND;
+                            break;
+                        }
+                        retFSM.charChangeMade = false;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
                 }
 
                 if (event->type == SDL_MOUSEBUTTONUP &&
@@ -556,7 +782,8 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     // Back button clicked
                     shared.cutOff = std::stoi(retFSM.charRet.ui.cutoffFrequency);
                     shared.gain = std::stoi(retFSM.charRet.ui.gain);
-                    deallocateCharResources(retFSM.charRet);
+                    retFSM.charSubmitClicked = false;
+                    deallocateCharResources(retFSM.charRet, retFSM.catSel);
                     if(retFSM.typeSel == typeState::STATE)
                     {
                         retFSM.currScreen = screenState::TYPE_REND;
@@ -1009,13 +1236,6 @@ dealocTypRes drawCategory(SDL_Window* window, SDL_Renderer* renderer, int select
         }
     }
 
-    // Calculate the maximum width of filter types
-    for (const auto& width : filterWidths) {
-        if (width > maxFilterWidth) {
-            maxFilterWidth = width;
-        }
-    }
-
     // Calculate the starting X position
     int startX = (winWidth - maxFilterWidth) / 2;
 
@@ -1092,24 +1312,15 @@ dealocTypRes drawCategory(SDL_Window* window, SDL_Renderer* renderer, int select
     return resRet;
 }
 
-dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, charState charSel)
+dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, catState catSel, charState charSel, std::vector<std::string> filterCharacteristics, bool submitClicked)
 {
     dealocCharRes resRet;
-
+    resRet.confirmShown = false;
     // Load font and set font size
-    TTF_Font* font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 24);
-
-    // Create gain label text surface and texture
     SDL_Color textColor = { 0, 0, 0 };
-    SDL_Surface* gainLabelSurface = TTF_RenderText_Solid(font, "Gain:", textColor);
-    SDL_Texture* gainLabelTexture = SDL_CreateTextureFromSurface(renderer, gainLabelSurface);
-
-    // Create cutoff frequency label text surface and texture
-    SDL_Surface* cutoffLabelSurface = TTF_RenderText_Solid(font, "Cutoff Frequency (Hz):", textColor);
-    SDL_Texture* cutoffLabelTexture = SDL_CreateTextureFromSurface(renderer, cutoffLabelSurface);
 
     // Create title text surface and texture
-    font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 30);
+    TTF_Font* font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 30);
     SDL_Surface* titleSurface = TTF_RenderText_Solid(font, "Filter Characteristics", textColor);
     SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
 
@@ -1117,14 +1328,6 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 21);
     SDL_Surface* instructionsSurface = TTF_RenderText_Solid(font, "Select Textbox and Enter Values", textColor);
     SDL_Texture* instructionsTexture = SDL_CreateTextureFromSurface(renderer, instructionsSurface);
-
-    // Create gain value text surface and texture
-    SDL_Surface* gainValueSurface = TTF_RenderText_Solid(font, inputs.gain.c_str(), textColor);
-    SDL_Texture* gainValueTexture = SDL_CreateTextureFromSurface(renderer, gainValueSurface);
-
-    // Create cutoff frequency value text surface and texture
-    SDL_Surface* cutoffValueSurface = TTF_RenderText_Solid(font, inputs.cutoffFrequency.c_str(), textColor);
-    SDL_Texture* cutoffValueTexture = SDL_CreateTextureFromSurface(renderer, cutoffValueSurface);
 
     // Get window dimensions
     int winWidth, winHeight;
@@ -1138,14 +1341,6 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     int instructionsWidth, instructionsHeight;
     SDL_QueryTexture(instructionsTexture, NULL, NULL, &instructionsWidth, &instructionsHeight);
 
-    // Get gain texture dimensions
-    int gainWidth, gainHeight;
-    SDL_QueryTexture(gainValueTexture, NULL, NULL, &gainWidth, &gainHeight);
-
-    // Get cut off texture dimensions
-    int cutoffWidth, cutoffHeight;
-    SDL_QueryTexture(cutoffValueTexture, NULL, NULL, &cutoffWidth, &cutoffHeight);
-
     // Draw title texture in the center of the screen
     SDL_Rect titleRect = { (winWidth - titleWidth) / 2, (winHeight - titleHeight) / 2 - 150, titleWidth, titleHeight };
     SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
@@ -1154,13 +1349,49 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     SDL_Rect instructionsRect = { (winWidth - instructionsWidth) / 2, titleRect.y + titleRect.h + 24, instructionsWidth, instructionsHeight };
     SDL_RenderCopy(renderer, instructionsTexture, NULL, &instructionsRect);
 
+    font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 24);
+
+    int maxFilterWidth = 0, filterHeight = 0;
+    std::vector<int> filterWidths;
+    std::vector<SDL_Texture*> characteristicTextures;
+    std::vector<SDL_Surface*> characteristicSurfaces;
+    for (const auto& characteristic : filterCharacteristics)
+    {
+        SDL_Surface* characteristicSurface = TTF_RenderText_Solid(font, characteristic.c_str(), textColor);
+        SDL_Texture* characteristicTexture = SDL_CreateTextureFromSurface(renderer, characteristicSurface);
+        characteristicTextures.push_back(characteristicTexture);
+        characteristicSurfaces.push_back(characteristicSurface);
+        int filterWidth;
+        SDL_QueryTexture(characteristicTexture, NULL, NULL, &filterWidth, &filterHeight);
+        filterWidths.push_back(filterWidth);
+        if (filterWidth > maxFilterWidth) {
+            maxFilterWidth = filterWidth;
+        }
+    }
+    // Universal Noting that cutoff frequency is passband cut off frequency
+    // Create gain value text surface and texture
+    SDL_Surface* gainValueSurface = TTF_RenderText_Solid(font, inputs.gain.c_str(), textColor);
+    SDL_Texture* gainValueTexture = SDL_CreateTextureFromSurface(renderer, gainValueSurface);
+
+    // Create cutoff frequency value text surface and texture
+    SDL_Surface* cutoffValueSurface = TTF_RenderText_Solid(font, inputs.cutoffFrequency.c_str(), textColor);
+    SDL_Texture* cutoffValueTexture = SDL_CreateTextureFromSurface(renderer, cutoffValueSurface);
+
+    // Get gain texture dimensions
+    int gainWidth, gainHeight;
+    SDL_QueryTexture(gainValueTexture, NULL, NULL, &gainWidth, &gainHeight);
+
+    // Get cut off texture dimensions
+    int cutoffWidth, cutoffHeight;
+    SDL_QueryTexture(cutoffValueTexture, NULL, NULL, &cutoffWidth, &cutoffHeight);
+
     // Render the gain label texture
-    SDL_Rect gainLabelRect = { (winWidth - gainWidth) / 3, instructionsRect.y + instructionsRect.h + 48, gainLabelSurface->w, gainLabelSurface->h };
-    SDL_RenderCopy(renderer, gainLabelTexture, nullptr, &gainLabelRect);
+    SDL_Rect gainLabelRect = { (winWidth - gainWidth) / 3, instructionsRect.y + instructionsRect.h + 48, characteristicSurfaces[0]->w, characteristicSurfaces[0]->h };
+    SDL_RenderCopy(renderer, characteristicTextures[0], nullptr, &gainLabelRect);
 
     // Render the cutoff frequency label texture
-    SDL_Rect cutoffLabelRect = { (winWidth - cutoffWidth) / 3,  gainLabelRect.y + gainLabelRect.h + 24, cutoffLabelSurface->w, cutoffLabelSurface->h };
-    SDL_RenderCopy(renderer, cutoffLabelTexture, nullptr, &cutoffLabelRect);
+    SDL_Rect cutoffLabelRect = { (winWidth - cutoffWidth) / 3,  gainLabelRect.y + gainLabelRect.h + 24, characteristicSurfaces[1]->w, characteristicSurfaces[1]->h };
+    SDL_RenderCopy(renderer, characteristicTextures[1], nullptr, &cutoffLabelRect);
 
     // Render the gain value text box texture
     SDL_Rect gainRect = { gainLabelRect.x + gainLabelRect.w + 10, instructionsRect.y + instructionsRect.h + 52, gainValueSurface->w, gainValueSurface->h };
@@ -1168,6 +1399,7 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     // Render the cutoff frequency value text box texture
     SDL_Rect cutoffRect = { cutoffLabelRect.x + cutoffLabelRect.w + 10, gainLabelRect.y + gainLabelRect.h + 28 , cutoffValueSurface->w, cutoffValueSurface->h };
 
+    // Darken Selection
     if (charSel == charState::GAIN)
     {
         SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
@@ -1182,14 +1414,104 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     // Draw box around the gain value
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(renderer, &gainRect);
-
     SDL_RenderCopy(renderer, gainValueTexture, nullptr, &gainRect);
-    SDL_RenderCopy(renderer, cutoffValueTexture, nullptr, &cutoffRect);
 
     // Draw box around cutoff frequency value
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(renderer, &cutoffRect);
+    SDL_RenderCopy(renderer, cutoffValueTexture, nullptr, &cutoffRect);
 
+    // Additional for: CHEB1, CHEB2, ELIP
+    if(catSel == catState::CHEB1 || catSel == catState::CHEB2)
+    {
+        //"Stopband Cut-Off Frequency(Hz):", "Max Passband Oscillation:", "Stopband Attenuation:"
+        SDL_Surface* stopbandFrequencyValueSurface = TTF_RenderText_Solid(font, inputs.stopbandFrequency.c_str(), textColor);
+        SDL_Texture* stopbandFrequencyValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandFrequencyValueSurface);
+
+        SDL_Surface* maxOscillationValueSurface = TTF_RenderText_Solid(font, inputs.maxOscillation.c_str(), textColor);
+        SDL_Texture* maxOscillationValueTexture = SDL_CreateTextureFromSurface(renderer, maxOscillationValueSurface);
+        
+        SDL_Surface* stopbandAttentuationValueSurface = TTF_RenderText_Solid(font, inputs.stopbandAttentuation.c_str(), textColor);
+        SDL_Texture* stopbandAttentuationValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandAttentuationValueSurface);
+
+        //For placement calculations
+        int stopbandFrequencyWidth, stopbandFrequencyHeight;
+        SDL_QueryTexture(stopbandFrequencyValueTexture, NULL, NULL, &stopbandFrequencyWidth, &stopbandFrequencyHeight);
+
+        int maxOscillationWidth, maxOscillationHeight;
+        SDL_QueryTexture(maxOscillationValueTexture, NULL, NULL, &maxOscillationWidth, &maxOscillationHeight);
+
+        int stopbandAttentuationWidth, stopbandAttentuationHeight;
+        SDL_QueryTexture(stopbandAttentuationValueTexture, NULL, NULL, &stopbandAttentuationWidth, &stopbandAttentuationHeight);
+
+        // Render the stopbandFrequency label texture
+        SDL_Rect stopbandFrequencyLabelRect = { (winWidth - stopbandFrequencyWidth) / 3, cutoffLabelRect.y + cutoffLabelRect.h + 24, characteristicSurfaces[2]->w, characteristicSurfaces[2]->h };
+        SDL_RenderCopy(renderer, characteristicTextures[2], nullptr, &stopbandFrequencyLabelRect);
+
+        // Render the maxOscillation label texture
+        SDL_Rect maxOscillationLabelRect = { (winWidth - maxOscillationWidth) / 3,  stopbandFrequencyLabelRect.y + stopbandFrequencyLabelRect.h + 24, characteristicSurfaces[3]->w, characteristicSurfaces[3]->h };
+        SDL_RenderCopy(renderer, characteristicTextures[3], nullptr, &maxOscillationLabelRect);
+
+        // Render the stopbandAttentuation label texture
+        SDL_Rect stopbandAttentuationLabelRect = { (winWidth - stopbandAttentuationWidth) / 3,  maxOscillationLabelRect.y + maxOscillationLabelRect.h + 24, characteristicSurfaces[4]->w, characteristicSurfaces[4]->h };
+        SDL_RenderCopy(renderer, characteristicTextures[4], nullptr, &stopbandAttentuationLabelRect);
+
+        // Render the stopbandFrequency value text box texture
+        SDL_Rect stopbandFrequencyRect = { stopbandFrequencyLabelRect.x + stopbandFrequencyLabelRect.w + 10, cutoffLabelRect.y + cutoffLabelRect.h + 28, stopbandFrequencyValueSurface->w, stopbandFrequencyValueSurface->h };
+
+        // Render the maxOscillation value text box texture
+        SDL_Rect maxOscillationRect = { maxOscillationLabelRect.x + maxOscillationLabelRect.w + 10, stopbandFrequencyLabelRect.y + stopbandFrequencyLabelRect.h + 28, maxOscillationValueSurface->w, maxOscillationValueSurface->h };
+
+        // Render the stopbandAttentuation value text box texture
+        SDL_Rect stopbandAttentuationRect = { stopbandAttentuationLabelRect.x + stopbandAttentuationLabelRect.w + 10, maxOscillationLabelRect.y + maxOscillationLabelRect.h + 28 , stopbandAttentuationValueSurface->w, stopbandAttentuationValueSurface->h };
+
+        // Darken Selection
+        if (charSel == charState::STOPBAND)
+        {
+            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+            SDL_RenderFillRect(renderer, &stopbandFrequencyRect); // Fill the rectangle on the renderer
+        }
+        else if (charSel == charState::MAXOSC)
+        {
+            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+            SDL_RenderFillRect(renderer, &maxOscillationRect); // Fill the rectangle on the renderer
+        }
+        else if (charSel == charState::STOPBANDATT)
+        {
+            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+            SDL_RenderFillRect(renderer, &stopbandAttentuationRect); // Fill the rectangle on the renderer
+        }
+
+        // Draw box around the stopbandFrequency value
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &stopbandFrequencyRect);
+        SDL_RenderCopy(renderer, stopbandFrequencyValueTexture, nullptr, &stopbandFrequencyRect);
+
+        // Draw box around maxOscillation value
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &maxOscillationRect);
+        SDL_RenderCopy(renderer, maxOscillationValueTexture, nullptr, &maxOscillationRect);
+
+        // Draw box around stopbandAttentuation value
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &stopbandAttentuationRect);
+        SDL_RenderCopy(renderer, stopbandAttentuationValueTexture, nullptr, &stopbandAttentuationRect);
+
+        resRet.stopbandFrequencyValueSurface = stopbandFrequencyValueSurface;
+        resRet.stopbandFrequencyValueTexture = stopbandFrequencyValueTexture;
+        resRet.maxOscillationValueSurface = maxOscillationValueSurface;
+        resRet.maxOscillationValueTexture = maxOscillationValueTexture;
+        resRet.stopbandAttentuationValueSurface = stopbandAttentuationValueSurface;
+        resRet.stopbandAttentuationValueTexture = stopbandAttentuationValueTexture;
+    }
+    else if(catSel == catState::ELIP)
+    {
+        //?
+        //SDL_Surface* gainValueSurface = TTF_RenderText_Solid(font, inputs.gain.c_str(), textColor);
+        //SDL_Texture* gainValueTexture = SDL_CreateTextureFromSurface(renderer, gainValueSurface);
+    }
+
+    textColor = { 0, 0, 0 };
     // Create submit button texture
     font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 26);
     SDL_Surface* buttonSurface = TTF_RenderText_Solid(font, "Submit", textColor);
@@ -1209,6 +1531,40 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
 
     SDL_RenderCopy(renderer, buttonTexture, NULL, &buttonRect);
 
+    // Create order message
+    if (submitClicked)
+    {
+        font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 21);
+        std::string explanation;
+        std::string orderMessage = "The order is: " + std::to_string(shared.order);
+        if(shared.order > 2.0)
+        {
+            textColor = { 255, 0, 0 };
+            explanation = "Change the parameters such that the order is less than 2.0";
+        }
+        else
+        {
+            textColor = { 0, 255, 0 };
+            resRet.confirmShown = true;
+            explanation = "Submit again to confirm your input";
+        }
+        SDL_Surface* orderSurface = TTF_RenderText_Solid(font, orderMessage.c_str(), textColor);
+        SDL_Texture* orderTexture = SDL_CreateTextureFromSurface(renderer, orderSurface);
+        SDL_Surface* explanationSurface = TTF_RenderText_Solid(font, explanation.c_str(), textColor);
+        SDL_Texture* explanationTexture = SDL_CreateTextureFromSurface(renderer, explanationSurface);
+
+        int orderWidth, orderHeight;
+        SDL_QueryTexture(orderTexture, NULL, NULL, &orderWidth, &orderHeight);
+        int explanationWidth, explanationHeight;
+        SDL_QueryTexture(explanationTexture, NULL, NULL, &explanationWidth, &explanationHeight);
+
+        SDL_Rect explanationRect = { (winWidth - explanationWidth) / 2, buttonRect.y - (explanationHeight + 50), explanationWidth, explanationHeight };
+        SDL_RenderCopy(renderer, explanationTexture, NULL, &explanationRect);
+        SDL_Rect orderRect = { (winWidth - orderWidth) / 2, explanationRect.y + (orderHeight + 4), orderWidth, orderHeight };
+        SDL_RenderCopy(renderer, orderTexture, NULL, &orderRect);
+    }
+
+    textColor = { 0, 0, 0 };
     // Create back button texture
     SDL_Surface* backSurface = TTF_RenderText_Solid(font, "<- Back", textColor);
     SDL_Texture* backTexture = SDL_CreateTextureFromSurface(renderer, backSurface);
@@ -1230,8 +1586,12 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     // Assign the buttonRect values to resRet.submit
     resRet.submit = buttonRect;
     resRet.back = backRect;
+
     resRet.ui.cutoffFrequency = inputs.cutoffFrequency;
     resRet.ui.gain = inputs.gain;
+    resRet.ui.stopbandFrequency = inputs.stopbandFrequency;
+    resRet.ui.maxOscillation = inputs.maxOscillation;
+    resRet.ui.stopbandAttentuation = inputs.stopbandAttentuation;
 
     // Assign resources that must be deallocated
     resRet.font = font;
@@ -1239,10 +1599,6 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     resRet.buttonTexture = buttonTexture;
     resRet.backSurface = backSurface;
     resRet.backTexture = backTexture;
-    resRet.gainLabelSurface = gainLabelSurface;
-    resRet.gainLabelTexture = gainLabelTexture;
-    resRet.cutoffLabelSurface = cutoffLabelSurface;
-    resRet.cutoffLabelTexture = cutoffLabelTexture;
     resRet.titleSurface = titleSurface;
     resRet.titleTexture = titleTexture;
     resRet.instructionsSurface = instructionsSurface;
@@ -1251,6 +1607,8 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     resRet.gainValueTexture = gainValueTexture;
     resRet.cutoffValueSurface = cutoffValueSurface;
     resRet.cutoffValueTexture = cutoffValueTexture;
+    resRet.characteristicSurfaces = characteristicSurfaces;
+    resRet.characteristicTextures = characteristicTextures;
 
     // Present the renderer
     SDL_RenderPresent(renderer);
@@ -1259,13 +1617,17 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
 
 }
 
-void deallocateCharResources(dealocCharRes charResRet)
+void deallocateCharResources(dealocCharRes charResRet, catState catSel)
 {
+    for (auto& surface : charResRet.characteristicSurfaces)
+    {
+        SDL_FreeSurface(surface);
+    }
+    for (auto& texture : charResRet.characteristicTextures)
+    {
+        SDL_DestroyTexture(texture);
+    }
     TTF_CloseFont(charResRet.font);
-    SDL_FreeSurface(charResRet.gainLabelSurface);
-    SDL_DestroyTexture(charResRet.gainLabelTexture);
-    SDL_FreeSurface(charResRet.cutoffLabelSurface);
-    SDL_DestroyTexture(charResRet.cutoffLabelTexture);
     SDL_FreeSurface(charResRet.titleSurface);
     SDL_DestroyTexture(charResRet.titleTexture);
     SDL_FreeSurface(charResRet.instructionsSurface);
@@ -1274,6 +1636,15 @@ void deallocateCharResources(dealocCharRes charResRet)
     SDL_DestroyTexture(charResRet.gainValueTexture);
     SDL_FreeSurface(charResRet.cutoffValueSurface);
     SDL_DestroyTexture(charResRet.cutoffValueTexture);
+    if(catSel == catState::CHEB1 || catSel == catState::CHEB2)
+    {
+        SDL_FreeSurface(charResRet.stopbandFrequencyValueSurface);
+        SDL_DestroyTexture(charResRet.stopbandFrequencyValueTexture);
+        SDL_FreeSurface(charResRet.maxOscillationValueSurface);
+        SDL_DestroyTexture(charResRet.maxOscillationValueTexture);
+        SDL_FreeSurface(charResRet.stopbandAttentuationValueSurface);
+        SDL_DestroyTexture(charResRet.stopbandAttentuationValueTexture);
+    }
 }
 
 void drawGenerating(SDL_Window* window, SDL_Renderer* renderer, transferFunct transfer)

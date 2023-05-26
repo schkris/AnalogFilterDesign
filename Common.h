@@ -16,6 +16,11 @@ struct transferFunct
 {
 	std::string numerator;
 	std::string denominator;
+	double num;
+	double Adenom;
+	double Bdenom;
+	double Cdenom;
+	double Ddenom;
 };
 
 struct commonVars
@@ -24,8 +29,16 @@ struct commonVars
 	topState topography;
 	catState category;
 	transferFunct transfer;
+	// Parameter Inputs
 	int cutOff;
 	int gain;
+	int stopFreq;
+	double maxOsc;
+	int stopAtt;
+	// Calculated Values
+	double order = 2.0;
+	double wc;
+	double epsilon;
 };
 
 extern commonVars shared;
