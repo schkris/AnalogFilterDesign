@@ -37,6 +37,8 @@ void openGUI()
         {},
         {},
         false,
+        false,
+        false,
         false
     };
 
@@ -424,19 +426,23 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                 // Filter Characteristics Render(Gain, Cut Off)
                 if (retFSM.catSel == catState::BUTT)
                 {
-                    if(retFSM.charSel == charState::STOPBAND || retFSM.charSel == charState::MAXOSC || retFSM.charSel == charState::STOPBANDATT)
+                    if(retFSM.charSel == charState::MAXOSC)
                     {
                         retFSM.charSel = charState::GAIN;
                     }
-                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):"}, retFSM.charSubmitClicked);
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.typeSel, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):", "Stopband Frequency(Hz):", "Max Passband Attenuation(-dB):", "Min Stopband Attenuation(-dB):"}, retFSM.charSubmitClicked, retFSM.charAttenError, retFSM.charFreqError);
                 }
                 else if (retFSM.catSel == catState::CHEB1)
                 {
-                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Passband Cut-Off Frequency(Hz):", "Stopband Cut-Off Frequency(Hz):", "Max Passband Oscillation(dB):", "Stopband Attenuation:"}, retFSM.charSubmitClicked);
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.typeSel, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):", "Stopband Frequency(Hz):", "Max Passband Attenuation(-dB):", "Min Stopband Attenuation(-dB):", "Max Passband Oscillation(-dB):"}, retFSM.charSubmitClicked, retFSM.charAttenError, retFSM.charFreqError);
                 }
                 else if (retFSM.catSel == catState::CHEB2)
                 {
-                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Passband Cut-Off Frequency(Hz):", "Stopband Cut-Off Frequency(Hz):", "Max Stopband Oscillation(dB):", "Stopband Attenuation:"}, retFSM.charSubmitClicked);
+                    if(retFSM.charSel == charState::MAXOSC)
+                    {
+                        retFSM.charSel = charState::GAIN;
+                    }
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.typeSel, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):", "Stopband Frequency(Hz):", "Max Passband Attenuation(-dB):", "Min Stopband Attenuation(-dB):"}, retFSM.charSubmitClicked, retFSM.charAttenError, retFSM.charFreqError);
                 }
                 else if(retFSM.catSel == catState::BESL)
                 {
@@ -444,11 +450,11 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     {
                         retFSM.charSel = charState::GAIN;
                     }
-                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):"}, retFSM.charSubmitClicked);
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.typeSel, retFSM.catSel, retFSM.charSel, {"???"}, retFSM.charSubmitClicked, retFSM.charAttenError, retFSM.charFreqError);
                 }
                 else if(retFSM.catSel == catState::ELIP)
                 {
-                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.catSel, retFSM.charSel, {"???"}, retFSM.charSubmitClicked);
+                    retFSM.charRet = drawCharacteristics(window, renderer, retFSM.charRet.ui, retFSM.typeSel, retFSM.catSel, retFSM.charSel, {"Gain:", "Cut-Off Frequency(Hz):", "Stopband Frequency(Hz):", "Max Passband Attenuation(-dB):", "Min Stopband Attenuation(-dB):", "Max Passband Oscillation(-dB):"}, retFSM.charSubmitClicked, retFSM.charAttenError, retFSM.charFreqError);
                 }
                 retFSM.currScreen = screenState::CHARACTERISTICS;
             break;
@@ -517,7 +523,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                         retFSM.charSel = charState::GAIN;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
-                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED && (retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::CHEB2 || retFSM.catSel == catState::ELIP))
+                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                     {
                         retFSM.charSel = charState::STOPBAND;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
@@ -569,6 +575,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
+
                 case charState::STOPBAND:
                     if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                     {
@@ -577,7 +584,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     }
                     else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED)
                     {
-                        retFSM.charSel = charState::MAXOSC;
+                        retFSM.charSel = charState::PASSBANDATT;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
@@ -627,7 +634,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
-                case charState::MAXOSC:
+                case charState::PASSBANDATT:
                     if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                     {
                         retFSM.charSel = charState::STOPBAND;
@@ -648,45 +655,51 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                         {
                             char digit = keyName[7];
                             // Handle text input events
-                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            if (retFSM.charRet.ui.passbandAttentuation == "0")
                             {
-                                retFSM.charRet.ui.maxOscillation = digit;
+                                retFSM.charRet.ui.passbandAttentuation = digit;
                             }
                             else
                             {
-                                retFSM.charRet.ui.maxOscillation += digit;
+                                retFSM.charRet.ui.passbandAttentuation += digit;
                             }
                         }
                         else if (isdigit(keyName[0]))
                         {
                             char digit = static_cast<char>(event->key.keysym.sym);
                             // Handle text input events
-                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            if (retFSM.charRet.ui.passbandAttentuation == "0")
                             {
-                                retFSM.charRet.ui.maxOscillation = digit;
+                                retFSM.charRet.ui.passbandAttentuation = digit;
                             }
                             else
                             {
-                                retFSM.charRet.ui.maxOscillation += digit;
+                                retFSM.charRet.ui.passbandAttentuation += digit;
                             }
                         }
                         else if (event->key.keysym.sym == SDLK_BACKSPACE)
                         {
-                            if (retFSM.charRet.ui.maxOscillation.length() == 1)
+                            if (retFSM.charRet.ui.passbandAttentuation.length() == 1)
                             {
-                                retFSM.charRet.ui.maxOscillation = "0";
+                                retFSM.charRet.ui.passbandAttentuation = "0";
                             }
                             else
                             {
-                                retFSM.charRet.ui.maxOscillation.pop_back();
+                                retFSM.charRet.ui.passbandAttentuation.pop_back();
                             }
                         }
                         retFSM.charChangeMade = true;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
-                case charState::STOPBANDATT:
+
+                    case charState::STOPBANDATT:
                     if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::PASSBANDATT;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_DOWN && event->key.state == SDL_PRESSED && (retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::ELIP))
                     {
                         retFSM.charSel = charState::MAXOSC;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
@@ -738,6 +751,59 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     break;
+                case charState::MAXOSC:
+                    if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
+                    {
+                        retFSM.charSel = charState::STOPBAND;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
+                    {
+                        // Get the name of the pressed key
+                        const char* keyName = SDL_GetKeyName(event->key.keysym.sym);
+
+                        // Check if the key name corresponds to a digit from the numpad
+                        if (strncmp(keyName, "Keypad ", 7) == 0 && isdigit(keyName[7]))
+                        {
+                            char digit = keyName[7];
+                            // Handle text input events
+                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            {
+                                retFSM.charRet.ui.maxOscillation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation += digit;
+                            }
+                        }
+                        else if (isdigit(keyName[0]))
+                        {
+                            char digit = static_cast<char>(event->key.keysym.sym);
+                            // Handle text input events
+                            if (retFSM.charRet.ui.maxOscillation == "0")
+                            {
+                                retFSM.charRet.ui.maxOscillation = digit;
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation += digit;
+                            }
+                        }
+                        else if (event->key.keysym.sym == SDLK_BACKSPACE)
+                        {
+                            if (retFSM.charRet.ui.maxOscillation.length() == 1)
+                            {
+                                retFSM.charRet.ui.maxOscillation = "0";
+                            }
+                            else
+                            {
+                                retFSM.charRet.ui.maxOscillation.pop_back();
+                            }
+                        }
+                        retFSM.charChangeMade = true;
+                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
+                    }
+                    break;
 
                 default:
 
@@ -752,25 +818,50 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                     // Submit button clicked
                     shared.cutOff = std::stoi(retFSM.charRet.ui.cutoffFrequency);
                     shared.gain = std::stoi(retFSM.charRet.ui.gain);
-                    if(retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::CHEB2 || retFSM.catSel == catState::ELIP)
+                    shared.stopFreq = std::stoi(retFSM.charRet.ui.stopbandFrequency);
+                    shared.passAtt = std::stoi(retFSM.charRet.ui.passbandAttentuation);
+                    shared.stopAtt = std::stoi(retFSM.charRet.ui.stopbandAttentuation);
+                    if(retFSM.catSel == catState::CHEB1 || retFSM.catSel == catState::ELIP)
                     {
-                        shared.stopFreq = std::stoi(retFSM.charRet.ui.stopbandFrequency);
 	                    shared.maxOsc = std::stoi(retFSM.charRet.ui.maxOscillation);
-	                    shared.stopAtt = std::stoi(retFSM.charRet.ui.stopbandAttentuation);
-                        orderCheby1Calc();
-                        if(!retFSM.charSubmitClicked)
-                        {
-                            retFSM.charSubmitClicked = true;
-                        }
-                        else if(retFSM.charSubmitClicked && retFSM.charRet.confirmShown && !retFSM.charChangeMade)
-                        {
-                            deallocateCharResources(retFSM.charRet, retFSM.catSel);
-                            retFSM.currScreen = screenState::GENERATING_REND;
-                            break;
-                        }
-                        retFSM.charChangeMade = false;
-                        retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
+                    // Second click for order
+                    calcOrder();
+                    if(shared.passAtt >= shared.stopAtt)
+                    {
+                        // Error Message for wrong attentuation
+                        retFSM.charAttenError = true;
+                    }
+                    else
+                    {
+                        retFSM.charAttenError = false;
+                    }
+                    if(retFSM.typeSel == typeState::HIGH && (shared.cutOff <= shared.stopFreq))
+                    {
+                        // Error Message for high
+                        retFSM.charFreqError = true;
+                    }
+                    else if(retFSM.typeSel == typeState::LOW && (shared.cutOff >= shared.stopFreq))
+                    {
+                        // Error Message for low
+                        retFSM.charFreqError = true;
+                    }
+                    else
+                    {
+                        retFSM.charFreqError = false;
+                    }
+                    if(!retFSM.charSubmitClicked)
+                    {
+                        retFSM.charSubmitClicked = true;
+                    }
+                    else if(retFSM.charSubmitClicked && retFSM.charRet.confirmShown && !retFSM.charChangeMade && !retFSM.charAttenError && !retFSM.charFreqError)
+                    {
+                        deallocateCharResources(retFSM.charRet, retFSM.catSel);
+                        retFSM.currScreen = screenState::GENERATING_REND;
+                        break;
+                    }
+                    retFSM.charChangeMade = false;
+                    retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                 }
 
                 if (event->type == SDL_MOUSEBUTTONUP &&
@@ -1312,7 +1403,7 @@ dealocTypRes drawCategory(SDL_Window* window, SDL_Renderer* renderer, int select
     return resRet;
 }
 
-dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, catState catSel, charState charSel, std::vector<std::string> filterCharacteristics, bool submitClicked)
+dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, typeState typeSel, catState catSel, charState charSel, std::vector<std::string> filterCharacteristics, bool submitClicked, bool attenError, bool freqError)
 {
     dealocCharRes resRet;
     resRet.confirmShown = false;
@@ -1368,6 +1459,7 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
             maxFilterWidth = filterWidth;
         }
     }
+    
     // Universal Noting that cutoff frequency is passband cut off frequency
     // Create gain value text surface and texture
     SDL_Surface* gainValueSurface = TTF_RenderText_Solid(font, inputs.gain.c_str(), textColor);
@@ -1377,6 +1469,18 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     SDL_Surface* cutoffValueSurface = TTF_RenderText_Solid(font, inputs.cutoffFrequency.c_str(), textColor);
     SDL_Texture* cutoffValueTexture = SDL_CreateTextureFromSurface(renderer, cutoffValueSurface);
 
+    // Create stopband frequency value text surface and texture
+    SDL_Surface* stopbandFrequencyValueSurface = TTF_RenderText_Solid(font, inputs.stopbandFrequency.c_str(), textColor);
+    SDL_Texture* stopbandFrequencyValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandFrequencyValueSurface);
+
+    // Create passband attenuation value text surface and texture
+    SDL_Surface* passbandAttValueSurface = TTF_RenderText_Solid(font, inputs.passbandAttentuation.c_str(), textColor);
+    SDL_Texture* passbandAttValueTexture = SDL_CreateTextureFromSurface(renderer, passbandAttValueSurface);
+
+    // Create stopband attenuation frequency value text surface and texture
+    SDL_Surface* stopbandAttValueSurface = TTF_RenderText_Solid(font, inputs.stopbandAttentuation.c_str(), textColor);
+    SDL_Texture* stopbandAttValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandAttValueSurface);
+
     // Get gain texture dimensions
     int gainWidth, gainHeight;
     SDL_QueryTexture(gainValueTexture, NULL, NULL, &gainWidth, &gainHeight);
@@ -1384,6 +1488,18 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     // Get cut off texture dimensions
     int cutoffWidth, cutoffHeight;
     SDL_QueryTexture(cutoffValueTexture, NULL, NULL, &cutoffWidth, &cutoffHeight);
+
+    // Get stopband texture dimensions
+    int stopbandWidth, stopbandHeight;
+    SDL_QueryTexture(stopbandFrequencyValueTexture, NULL, NULL, &stopbandWidth, &stopbandHeight);
+
+    // Get passband attenuation texture dimensions
+    int passbandAttWidth, passbandAttHeight;
+    SDL_QueryTexture(passbandAttValueTexture, NULL, NULL, &passbandAttWidth, &passbandAttHeight);
+
+    // Get stopband attentuation texture dimensions
+    int stopbandAttWidth, stopbandAttHeight;
+    SDL_QueryTexture(stopbandAttValueTexture, NULL, NULL, &stopbandAttWidth, &stopbandAttHeight);
 
     // Render the gain label texture
     SDL_Rect gainLabelRect = { (winWidth - gainWidth) / 3, instructionsRect.y + instructionsRect.h + 48, characteristicSurfaces[0]->w, characteristicSurfaces[0]->h };
@@ -1393,11 +1509,32 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     SDL_Rect cutoffLabelRect = { (winWidth - cutoffWidth) / 3,  gainLabelRect.y + gainLabelRect.h + 24, characteristicSurfaces[1]->w, characteristicSurfaces[1]->h };
     SDL_RenderCopy(renderer, characteristicTextures[1], nullptr, &cutoffLabelRect);
 
+    // Render the stopband frequency label texture
+    SDL_Rect stopbandLabelRect = { (winWidth - stopbandWidth) / 3, cutoffLabelRect.y + cutoffLabelRect.h + 24, characteristicSurfaces[2]->w, characteristicSurfaces[2]->h };
+    SDL_RenderCopy(renderer, characteristicTextures[2], nullptr, &stopbandLabelRect);
+
+    // Render the passband attenuation label texture
+    SDL_Rect passbandAttLabelRect = { (winWidth - passbandAttWidth) / 3, stopbandLabelRect.y + stopbandLabelRect.h + 24, characteristicSurfaces[3]->w, characteristicSurfaces[3]->h };
+    SDL_RenderCopy(renderer, characteristicTextures[3], nullptr, &passbandAttLabelRect);
+
+    // Render the stopband attentuation label texture
+    SDL_Rect stopbandAttLabelRect = { (winWidth - stopbandAttWidth) / 3, passbandAttLabelRect.y + passbandAttLabelRect.h + 24, characteristicSurfaces[4]->w, characteristicSurfaces[4]->h };
+    SDL_RenderCopy(renderer, characteristicTextures[4], nullptr, &stopbandAttLabelRect);
+
     // Render the gain value text box texture
     SDL_Rect gainRect = { gainLabelRect.x + gainLabelRect.w + 10, instructionsRect.y + instructionsRect.h + 52, gainValueSurface->w, gainValueSurface->h };
 
     // Render the cutoff frequency value text box texture
     SDL_Rect cutoffRect = { cutoffLabelRect.x + cutoffLabelRect.w + 10, gainLabelRect.y + gainLabelRect.h + 28 , cutoffValueSurface->w, cutoffValueSurface->h };
+
+    // Render the stopband frequency value text box texture
+    SDL_Rect stopbandRect = { stopbandLabelRect.x + stopbandLabelRect.w + 10, cutoffLabelRect.y + cutoffLabelRect.h + 28, stopbandFrequencyValueSurface->w, stopbandFrequencyValueSurface->h };
+
+    // Render the passband attenuation value text box texture
+    SDL_Rect passbandAttRect = { passbandAttLabelRect.x + passbandAttLabelRect.w + 10, stopbandLabelRect.y + stopbandLabelRect.h + 28, passbandAttValueSurface->w, passbandAttValueSurface->h };
+
+    // Render the stopband attentuation value text box texture
+    SDL_Rect stopbandAttRect = { stopbandAttLabelRect.x + stopbandAttLabelRect.w + 10, passbandAttLabelRect.y + passbandAttLabelRect.h + 28, stopbandAttValueSurface->w, stopbandAttValueSurface->h };
 
     // Darken Selection
     if (charSel == charState::GAIN)
@@ -1410,6 +1547,21 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
         SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
         SDL_RenderFillRect(renderer, &cutoffRect); // Fill the rectangle on the renderer
     }
+    else if (charSel == charState::STOPBAND)
+    {
+        SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+        SDL_RenderFillRect(renderer, &stopbandRect); // Fill the rectangle on the renderer
+    }
+    else if (charSel == charState::PASSBANDATT)
+    {
+        SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+        SDL_RenderFillRect(renderer, &passbandAttRect); // Fill the rectangle on the renderer
+    }
+    else if (charSel == charState::STOPBANDATT)
+    {
+        SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
+        SDL_RenderFillRect(renderer, &stopbandAttRect); // Fill the rectangle on the renderer
+    }
 
     // Draw box around the gain value
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -1421,94 +1573,54 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     SDL_RenderDrawRect(renderer, &cutoffRect);
     SDL_RenderCopy(renderer, cutoffValueTexture, nullptr, &cutoffRect);
 
-    // Additional for: CHEB1, CHEB2, ELIP
-    if(catSel == catState::CHEB1 || catSel == catState::CHEB2)
-    {
-        //"Stopband Cut-Off Frequency(Hz):", "Max Passband Oscillation:", "Stopband Attenuation:"
-        SDL_Surface* stopbandFrequencyValueSurface = TTF_RenderText_Solid(font, inputs.stopbandFrequency.c_str(), textColor);
-        SDL_Texture* stopbandFrequencyValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandFrequencyValueSurface);
+    // Draw box around stopband frequency value
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &stopbandRect);
+    SDL_RenderCopy(renderer, stopbandFrequencyValueTexture, nullptr, &stopbandRect);
 
+    // Draw box around passband attenuation value
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &passbandAttRect);
+    SDL_RenderCopy(renderer, passbandAttValueTexture, nullptr, &passbandAttRect);
+
+    // Draw box around stopband attentuation value
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &stopbandAttRect);
+    SDL_RenderCopy(renderer, stopbandAttValueTexture, nullptr, &stopbandAttRect);
+
+    // Additional for: CHEB1, ELIP
+    if(catSel == catState::CHEB1 || catSel == catState::ELIP)
+    {
+        // Create max oscillation value text surface and texture
         SDL_Surface* maxOscillationValueSurface = TTF_RenderText_Solid(font, inputs.maxOscillation.c_str(), textColor);
         SDL_Texture* maxOscillationValueTexture = SDL_CreateTextureFromSurface(renderer, maxOscillationValueSurface);
-        
-        SDL_Surface* stopbandAttentuationValueSurface = TTF_RenderText_Solid(font, inputs.stopbandAttentuation.c_str(), textColor);
-        SDL_Texture* stopbandAttentuationValueTexture = SDL_CreateTextureFromSurface(renderer, stopbandAttentuationValueSurface);
 
-        //For placement calculations
-        int stopbandFrequencyWidth, stopbandFrequencyHeight;
-        SDL_QueryTexture(stopbandFrequencyValueTexture, NULL, NULL, &stopbandFrequencyWidth, &stopbandFrequencyHeight);
-
+        // Get max oscillation texture dimensions
         int maxOscillationWidth, maxOscillationHeight;
         SDL_QueryTexture(maxOscillationValueTexture, NULL, NULL, &maxOscillationWidth, &maxOscillationHeight);
 
-        int stopbandAttentuationWidth, stopbandAttentuationHeight;
-        SDL_QueryTexture(stopbandAttentuationValueTexture, NULL, NULL, &stopbandAttentuationWidth, &stopbandAttentuationHeight);
-
-        // Render the stopbandFrequency label texture
-        SDL_Rect stopbandFrequencyLabelRect = { (winWidth - stopbandFrequencyWidth) / 3, cutoffLabelRect.y + cutoffLabelRect.h + 24, characteristicSurfaces[2]->w, characteristicSurfaces[2]->h };
-        SDL_RenderCopy(renderer, characteristicTextures[2], nullptr, &stopbandFrequencyLabelRect);
-
         // Render the maxOscillation label texture
-        SDL_Rect maxOscillationLabelRect = { (winWidth - maxOscillationWidth) / 3,  stopbandFrequencyLabelRect.y + stopbandFrequencyLabelRect.h + 24, characteristicSurfaces[3]->w, characteristicSurfaces[3]->h };
-        SDL_RenderCopy(renderer, characteristicTextures[3], nullptr, &maxOscillationLabelRect);
-
-        // Render the stopbandAttentuation label texture
-        SDL_Rect stopbandAttentuationLabelRect = { (winWidth - stopbandAttentuationWidth) / 3,  maxOscillationLabelRect.y + maxOscillationLabelRect.h + 24, characteristicSurfaces[4]->w, characteristicSurfaces[4]->h };
-        SDL_RenderCopy(renderer, characteristicTextures[4], nullptr, &stopbandAttentuationLabelRect);
-
-        // Render the stopbandFrequency value text box texture
-        SDL_Rect stopbandFrequencyRect = { stopbandFrequencyLabelRect.x + stopbandFrequencyLabelRect.w + 10, cutoffLabelRect.y + cutoffLabelRect.h + 28, stopbandFrequencyValueSurface->w, stopbandFrequencyValueSurface->h };
+        SDL_Rect maxOscillationLabelRect = { (winWidth - maxOscillationWidth) / 3,  stopbandAttLabelRect.y + stopbandAttLabelRect.h + 24, characteristicSurfaces[5]->w, characteristicSurfaces[5]->h };
+        SDL_RenderCopy(renderer, characteristicTextures[5], nullptr, &maxOscillationLabelRect);
 
         // Render the maxOscillation value text box texture
-        SDL_Rect maxOscillationRect = { maxOscillationLabelRect.x + maxOscillationLabelRect.w + 10, stopbandFrequencyLabelRect.y + stopbandFrequencyLabelRect.h + 28, maxOscillationValueSurface->w, maxOscillationValueSurface->h };
-
-        // Render the stopbandAttentuation value text box texture
-        SDL_Rect stopbandAttentuationRect = { stopbandAttentuationLabelRect.x + stopbandAttentuationLabelRect.w + 10, maxOscillationLabelRect.y + maxOscillationLabelRect.h + 28 , stopbandAttentuationValueSurface->w, stopbandAttentuationValueSurface->h };
+        SDL_Rect maxOscillationRect = { maxOscillationLabelRect.x + maxOscillationLabelRect.w + 10, stopbandAttLabelRect.y + stopbandAttLabelRect.h + 28, maxOscillationValueSurface->w, maxOscillationValueSurface->h };
 
         // Darken Selection
-        if (charSel == charState::STOPBAND)
-        {
-            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
-            SDL_RenderFillRect(renderer, &stopbandFrequencyRect); // Fill the rectangle on the renderer
-        }
-        else if (charSel == charState::MAXOSC)
+        if (charSel == charState::MAXOSC)
         {
             SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
             SDL_RenderFillRect(renderer, &maxOscillationRect); // Fill the rectangle on the renderer
         }
-        else if (charSel == charState::STOPBANDATT)
-        {
-            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Set the color for filling the rectangle
-            SDL_RenderFillRect(renderer, &stopbandAttentuationRect); // Fill the rectangle on the renderer
-        }
-
-        // Draw box around the stopbandFrequency value
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderDrawRect(renderer, &stopbandFrequencyRect);
-        SDL_RenderCopy(renderer, stopbandFrequencyValueTexture, nullptr, &stopbandFrequencyRect);
 
         // Draw box around maxOscillation value
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(renderer, &maxOscillationRect);
         SDL_RenderCopy(renderer, maxOscillationValueTexture, nullptr, &maxOscillationRect);
 
-        // Draw box around stopbandAttentuation value
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderDrawRect(renderer, &stopbandAttentuationRect);
-        SDL_RenderCopy(renderer, stopbandAttentuationValueTexture, nullptr, &stopbandAttentuationRect);
-
-        resRet.stopbandFrequencyValueSurface = stopbandFrequencyValueSurface;
-        resRet.stopbandFrequencyValueTexture = stopbandFrequencyValueTexture;
+        // Dealloc set
         resRet.maxOscillationValueSurface = maxOscillationValueSurface;
         resRet.maxOscillationValueTexture = maxOscillationValueTexture;
-        resRet.stopbandAttentuationValueSurface = stopbandAttentuationValueSurface;
-        resRet.stopbandAttentuationValueTexture = stopbandAttentuationValueTexture;
-    }
-    else if(catSel == catState::ELIP)
-    {
-        //?
-        //SDL_Surface* gainValueSurface = TTF_RenderText_Solid(font, inputs.gain.c_str(), textColor);
-        //SDL_Texture* gainValueTexture = SDL_CreateTextureFromSurface(renderer, gainValueSurface);
     }
 
     textColor = { 0, 0, 0 };
@@ -1537,10 +1649,27 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
         font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 21);
         std::string explanation;
         std::string orderMessage = "The order is: " + std::to_string(shared.order);
-        if(shared.order > 2.0)
+        if (attenError)
         {
             textColor = { 255, 0, 0 };
-            explanation = "Change the parameters such that the order is less than 2.0";
+            explanation = "Change the parameters such that the stopband is less than the passband attentuation";
+        }
+        else if (freqError)
+        {
+            textColor = { 255, 0, 0 };
+            if(typeSel == typeState::HIGH)
+            {
+                explanation = "Change the parameters such that the cut-off is greater than the stopband frequency";
+            }
+            else if(typeSel == typeState::LOW)
+            {
+                explanation = "Change the parameters such that the cut-off is less than the stopband frequency";
+            }
+        }
+        else if(shared.order > 4.0)
+        {
+            textColor = { 255, 0, 0 };
+            explanation = "Change the parameters such that the order is less than 4.0";
         }
         else
         {
@@ -1592,6 +1721,7 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     resRet.ui.stopbandFrequency = inputs.stopbandFrequency;
     resRet.ui.maxOscillation = inputs.maxOscillation;
     resRet.ui.stopbandAttentuation = inputs.stopbandAttentuation;
+    resRet.ui.passbandAttentuation = inputs.passbandAttentuation;
 
     // Assign resources that must be deallocated
     resRet.font = font;
@@ -1603,12 +1733,17 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
     resRet.titleTexture = titleTexture;
     resRet.instructionsSurface = instructionsSurface;
     resRet.instructionsTexture = instructionsTexture;
+    // 5 Values (# 6 is set in if statement)
     resRet.gainValueSurface = gainValueSurface;
     resRet.gainValueTexture = gainValueTexture;
     resRet.cutoffValueSurface = cutoffValueSurface;
     resRet.cutoffValueTexture = cutoffValueTexture;
-    resRet.characteristicSurfaces = characteristicSurfaces;
-    resRet.characteristicTextures = characteristicTextures;
+    resRet.stopbandFrequencyValueSurface = stopbandFrequencyValueSurface;
+    resRet.stopbandFrequencyValueTexture = stopbandFrequencyValueTexture;
+    resRet.passbandAttentuationValueSurface = passbandAttValueSurface;
+    resRet.passbandAttentuationValueTexture = passbandAttValueTexture;
+    resRet.stopbandAttentuationValueSurface = stopbandAttValueSurface;
+    resRet.stopbandAttentuationValueTexture = stopbandAttValueTexture;
 
     // Present the renderer
     SDL_RenderPresent(renderer);
@@ -1619,6 +1754,23 @@ dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, co
 
 void deallocateCharResources(dealocCharRes charResRet, catState catSel)
 {
+    TTF_CloseFont(charResRet.font);
+    SDL_FreeSurface(charResRet.titleSurface);
+    SDL_DestroyTexture(charResRet.titleTexture);
+    SDL_FreeSurface(charResRet.instructionsSurface);
+    SDL_DestroyTexture(charResRet.instructionsTexture);
+    // 6 Values
+    SDL_FreeSurface(charResRet.gainValueSurface);
+    SDL_DestroyTexture(charResRet.gainValueTexture);
+    SDL_FreeSurface(charResRet.cutoffValueSurface);
+    SDL_DestroyTexture(charResRet.cutoffValueTexture);
+    SDL_FreeSurface(charResRet.stopbandFrequencyValueSurface);
+    SDL_DestroyTexture(charResRet.stopbandFrequencyValueTexture);
+    SDL_FreeSurface(charResRet.passbandAttentuationValueSurface);
+    SDL_DestroyTexture(charResRet.passbandAttentuationValueTexture);
+    SDL_FreeSurface(charResRet.stopbandAttentuationValueSurface);
+    SDL_DestroyTexture(charResRet.stopbandAttentuationValueTexture);
+    // 6 Labels
     for (auto& surface : charResRet.characteristicSurfaces)
     {
         SDL_FreeSurface(surface);
@@ -1627,23 +1779,10 @@ void deallocateCharResources(dealocCharRes charResRet, catState catSel)
     {
         SDL_DestroyTexture(texture);
     }
-    TTF_CloseFont(charResRet.font);
-    SDL_FreeSurface(charResRet.titleSurface);
-    SDL_DestroyTexture(charResRet.titleTexture);
-    SDL_FreeSurface(charResRet.instructionsSurface);
-    SDL_DestroyTexture(charResRet.instructionsTexture);
-    SDL_FreeSurface(charResRet.gainValueSurface);
-    SDL_DestroyTexture(charResRet.gainValueTexture);
-    SDL_FreeSurface(charResRet.cutoffValueSurface);
-    SDL_DestroyTexture(charResRet.cutoffValueTexture);
-    if(catSel == catState::CHEB1 || catSel == catState::CHEB2)
+    if(catSel == catState::CHEB1 || catSel == catState::ELIP)
     {
-        SDL_FreeSurface(charResRet.stopbandFrequencyValueSurface);
-        SDL_DestroyTexture(charResRet.stopbandFrequencyValueTexture);
         SDL_FreeSurface(charResRet.maxOscillationValueSurface);
         SDL_DestroyTexture(charResRet.maxOscillationValueTexture);
-        SDL_FreeSurface(charResRet.stopbandAttentuationValueSurface);
-        SDL_DestroyTexture(charResRet.stopbandAttentuationValueTexture);
     }
 }
 

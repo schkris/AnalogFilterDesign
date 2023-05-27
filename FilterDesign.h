@@ -10,13 +10,21 @@ struct complex
 
 transferFunct findTransferFunct();
 
-std::string numButtTrans(double wc);
+void calcOrder();
 
-std::string denomButtTrans(double wc);
+void orderButtCalc();
 
 void orderCheby1Calc();
 
+void orderCheby2Calc();
+
+void orderElipCalc();
+
 void roundOrder();
+
+std::string numButtTrans(double wc);
+
+std::string denomButtTrans(double wc);
 
 void multiplyPoles(std::vector<complex> poles);
 

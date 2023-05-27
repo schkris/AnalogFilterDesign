@@ -31,6 +31,88 @@ transferFunct findTransferFunct()
 	return transfer;
 }
 
+void calcOrder()
+{
+	if(shared.category == catState::BUTT)
+	{
+		orderButtCalc();
+	}
+	else if(shared.category == catState::CHEB1)
+	{
+		orderCheby1Calc();
+	}
+	else if(shared.category == catState::CHEB2)
+	{
+		orderCheby2Calc();
+	}
+	else if(shared.category == catState::ELIP)
+	{
+		orderElipCalc();
+	}
+	else if(shared.category == catState::BESL)
+	{
+
+	}
+}
+
+void orderButtCalc()
+{
+	double omegaP = 2 * M_PI * shared.cutOff;
+    double omegaS = 2 * M_PI * shared.stopFreq;
+	if(shared.type == typeState::LOW)
+	{
+		shared.order = (log(pow(10, (shared.stopAtt / 10.0)) - 1.0))/(2*log(omegaS/omegaP));
+	}
+	else if(shared.type == typeState::HIGH)
+	{
+		shared.order = (log(pow(10, (shared.stopAtt / 10.0)) - 1.0))/(2*log(omegaP/omegaS));
+	}
+}
+
+// Possibly find a better source for this
+void orderCheby1Calc()
+{
+    shared.epsilon = sqrt(pow(10, (shared.maxOsc / 10.0)) - 1.0);
+	double lambda = sqrt(pow(10, (shared.stopAtt / 10.0)) - 1.0);
+	double omegaP = 2 * M_PI * shared.cutOff;
+    double omegaS = 2 * M_PI * shared.stopFreq;
+	double omegaR = omegaS / omegaP;
+	//order acosh(sqrt((10^(.1*abs(rs))-1)/(10^(.1*abs(rp))-1)))/acosh(WA)
+	shared.order = acosh(lambda / shared.epsilon) / acosh(omegaR);
+}
+
+void orderCheby2Calc()
+{
+	double omegaP = 2 * M_PI * shared.cutOff;
+    double omegaS = 2 * M_PI * shared.stopFreq;
+	double D = (pow(10, (shared.stopAtt / 10.0)) - 1.0)/(pow(10, (shared.passAtt / 10.0)) - 1.0);
+	shared.order = acosh(sqrt(D)) / acosh(1/omegaP);
+}
+
+void orderElipCalc()
+{
+	double omegaP = 2 * M_PI * shared.cutOff;
+    double omegaS = 2 * M_PI * shared.stopFreq;
+	double D = (pow(10, (shared.stopAtt / 10.0)) - 1.0)/(pow(10, (shared.passAtt / 10.0)) - 1.0);
+	double k = omegaP/omegaS;
+	double kprime = sqrt(1.0 - pow(k, 2));
+	double qnauth = (1/2)*((1.0-sqrt(kprime))/(1.0+sqrt(kprime)));
+	double q = qnauth + 2 * pow(qnauth, 5) + 15 * pow(qnauth, 9) + 150 * pow(qnauth, 13);
+	shared.order = log(16*D)/log(1/q);
+}
+
+// Rounds the order by modifying the oscillation or stop frequency for efficiency
+void roundOrder()
+{
+	double roundedOrder = ceil(shared.order);
+	while( shared.order < (roundedOrder - 0.05))
+	{
+		shared.maxOsc = shared.maxOsc - 0.1;
+		orderCheby1Calc();
+	}
+	shared.order = roundedOrder;
+}
+
 // Finds the numerator of the butterworth transfer function
 std::string numButtTrans(double wc)
 {
@@ -58,29 +140,6 @@ std::string denomButtTrans(double wc)
 	return "s^2 + " + std::to_string(a) + " * s + " + std::to_string(b);
 	shared.transfer.Adenom = a;
 	shared.transfer.Bdenom = b;
-}
-
-void orderCheby1Calc()
-{
-    shared.epsilon = sqrt(pow(10, (shared.maxOsc / 10.0)) - 1.0);
-	double lambda = sqrt(pow(10, (shared.stopAtt / 10.0)) - 1.0);
-	double omegaP = 2 * M_PI * shared.cutOff;
-    double omegaS = 2 * M_PI * shared.stopFreq;
-	double omegaR = omegaS / omegaP;
-	//order acosh(sqrt((10^(.1*abs(rs))-1)/(10^(.1*abs(rp))-1)))/acosh(WA)
-	shared.order = acosh(lambda / shared.epsilon) / acosh(omegaR);
-}
-
-// Rounds 
-void roundOrder()
-{
-	double roundedOrder = ceil(shared.order);
-	while( shared.order < (roundedOrder - 0.05))
-	{
-		shared.maxOsc = shared.maxOsc - 0.1;
-		orderCheby1Calc();
-	}
-	shared.order = roundedOrder;
 }
 
 // Finds the numerator of the Chebyshev 1 transfer function
