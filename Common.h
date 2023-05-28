@@ -30,11 +30,11 @@ struct commonVars
 	catState category;
 	transferFunct transfer;
 	// Parameter Inputs
-	int gain;
-	int cutOff;
-	int stopFreq;
-	int passAtt;
-	int stopAtt;
+	double gain;
+	double cutOff;
+	double stopFreq;
+	double passAtt;
+	double stopAtt;
 	double maxOsc;
 	// Calculated Values
 	double order = 2.0;

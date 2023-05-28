@@ -50,6 +50,26 @@ struct dealocTypRes
 	SDL_Texture* instructionsTexture;
 };
 
+struct dealocTopCatRes
+{
+	// Not deallocated but needs to be returned
+	SDL_Rect submit;
+	SDL_Rect back;
+	// Rest are deallocated
+	TTF_Font* font;
+	SDL_Surface* titleSurface;
+	SDL_Texture* titleTexture;
+	std::vector<SDL_Texture*> filterTextures;
+	SDL_Surface* buttonSurface;
+	SDL_Texture* buttonTexture;
+	SDL_Surface* backSurface;
+	SDL_Texture* backTexture;
+	SDL_Surface* instructionsSurface;
+	SDL_Texture* instructionsTexture;
+	SDL_Surface* pathSurface;
+	SDL_Texture* pathTexture;
+};
+
 struct dealocCharRes
 {
 	// Not deallocated but needs to be returned
@@ -84,6 +104,8 @@ struct dealocCharRes
 	SDL_Texture* buttonTexture;
 	SDL_Surface* backSurface;
 	SDL_Texture* backTexture;
+	SDL_Surface* pathSurface;
+	SDL_Texture* pathTexture;
 };
 
 struct fsmRet
@@ -96,8 +118,8 @@ struct fsmRet
 	charState charSel;
 	dealocTitRes titRet;
 	dealocTypRes typRet;
-	dealocTypRes topRet;
-	dealocTypRes catRet;
+	dealocTopCatRes topRet;
+	dealocTopCatRes catRet;
 	dealocCharRes charRet;
 	bool charSubmitClicked = false;
 	bool charChangeMade;
@@ -122,16 +144,19 @@ dealocTypRes drawType(SDL_Window* window, SDL_Renderer* renderer, int selectedTy
 void deallocateTypeResources(dealocTypRes typResRet);
 
 // Function draws the topology select screen
-dealocTypRes drawTopology(SDL_Window* window, SDL_Renderer* renderer, std::vector<std::string> filterTypes, int selectedTopology);
+dealocTopCatRes drawTopology(SDL_Window* window, SDL_Renderer* renderer, std::vector<std::string> filterTypes, int selectedTopology, typeState typeSel);
 
 // Function draws the category select screen
-dealocTypRes drawCategory(SDL_Window* window, SDL_Renderer* renderer, int selectedType);
+dealocTopCatRes drawCategory(SDL_Window* window, SDL_Renderer* renderer, int selectedType, typeState typeSel, topState topSel);
+
+// Function deallocates category allocated vars when done
+void deallocateTopCatResources(dealocTopCatRes typResRet);
 
 // Function draws a circle
 void drawCircle(SDL_Renderer* renderer, int centerX, int centerY, int radius, SDL_Color color);
 
 // Function draws the characterisitcs input screen
-dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, typeState typeSel, catState catSel, charState charSel, std::vector<std::string> filterTypes, bool submitClicked, bool attenError, bool freqError);
+dealocCharRes drawCharacteristics(SDL_Window* window, SDL_Renderer* renderer, const CharacteristicInputs& inputs, typeState typeSel, topState topSel, catState catSel, charState charSel, std::vector<std::string> filterTypes, bool submitClicked, bool attenError, bool freqError);
 // Function deallocates char allocated vars when done
 void deallocateCharResources(dealocCharRes charResRet, catState catSel);
 

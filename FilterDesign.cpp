@@ -96,7 +96,9 @@ void orderElipCalc()
 	double D = (pow(10, (shared.stopAtt / 10.0)) - 1.0)/(pow(10, (shared.passAtt / 10.0)) - 1.0);
 	double k = omegaP/omegaS;
 	double kprime = sqrt(1.0 - pow(k, 2));
-	double qnauth = (1/2)*((1.0-sqrt(kprime))/(1.0+sqrt(kprime)));
+	double qnum = 1.0-sqrt(kprime);
+	double qdenom = 1.0+sqrt(kprime);
+	double qnauth = (0.5)*(qnum/qdenom);
 	double q = qnauth + 2 * pow(qnauth, 5) + 15 * pow(qnauth, 9) + 150 * pow(qnauth, 13);
 	shared.order = log(16*D)/log(1/q);
 }
