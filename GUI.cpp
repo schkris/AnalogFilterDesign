@@ -809,7 +809,7 @@ fsmRet screenFSM(SDL_Event* event, SDL_Window* window, SDL_Renderer* renderer, f
                 case charState::MAXOSC:
                     if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_UP && event->key.state == SDL_PRESSED)
                     {
-                        retFSM.charSel = charState::STOPBAND;
+                        retFSM.charSel = charState::STOPBANDATT;
                         retFSM.currScreen = screenState::CHARACTERISTICS_REND;
                     }
                     else if (event->type == SDL_TEXTINPUT || event->type == SDL_KEYDOWN)
@@ -2046,18 +2046,60 @@ void drawGenerating(SDL_Window* window, SDL_Renderer* renderer, transferFunct tr
     SDL_Surface* titleSurface = TTF_RenderText_Solid(font, "Generating...", textColor);
     SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
 
-    // Create numerator text surface and texture
+    // Create numerator and denominator text surfaces and textures
     font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 21);
-    SDL_Surface* numeratorSurface = TTF_RenderText_Solid(font, transfer.numerator.c_str(), textColor);
-    SDL_Texture* numeratorTexture = SDL_CreateTextureFromSurface(renderer, numeratorSurface);
-    // Create denominator text surface and texture
-    SDL_Surface* denominatorSurface = TTF_RenderText_Solid(font, transfer.denominator.c_str(), textColor);
-    SDL_Texture* denominatorTexture = SDL_CreateTextureFromSurface(renderer, denominatorSurface);
+    SDL_Surface* numeratorSurface1 = nullptr;
+    SDL_Texture* numeratorTexture1 = nullptr;
+    SDL_Surface* denominatorSurface1 = nullptr;
+    SDL_Texture* denominatorTexture1 = nullptr;
+    SDL_Surface* numeratorSurface2 = nullptr;
+    SDL_Texture* numeratorTexture2 = nullptr;
+    SDL_Surface* denominatorSurface2 = nullptr;
+    SDL_Texture* denominatorTexture2 = nullptr;
+
+    if (transfer.order == 1)
+    {
+        numeratorSurface1 = TTF_RenderText_Solid(font, transfer.firstOrder.numerator.c_str(), textColor);
+        numeratorTexture1 = SDL_CreateTextureFromSurface(renderer, numeratorSurface1);
+        denominatorSurface1 = TTF_RenderText_Solid(font, transfer.firstOrder.denominator.c_str(), textColor);
+        denominatorTexture1 = SDL_CreateTextureFromSurface(renderer, denominatorSurface1);
+    }
+    else if (transfer.order == 2)
+    {
+        numeratorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.numerator.c_str(), textColor);
+        numeratorTexture1 = SDL_CreateTextureFromSurface(renderer, numeratorSurface1);
+        denominatorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.denominator.c_str(), textColor);
+        denominatorTexture1 = SDL_CreateTextureFromSurface(renderer, denominatorSurface1);
+    }
+    else if (transfer.order == 3)
+    {
+        numeratorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.numerator.c_str(), textColor);
+        numeratorTexture1 = SDL_CreateTextureFromSurface(renderer, numeratorSurface1);
+        denominatorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.denominator.c_str(), textColor);
+        denominatorTexture1 = SDL_CreateTextureFromSurface(renderer, denominatorSurface1);
+        numeratorSurface2 = TTF_RenderText_Solid(font, transfer.firstOrder.numerator.c_str(), textColor);
+        numeratorTexture2 = SDL_CreateTextureFromSurface(renderer, numeratorSurface2);
+        denominatorSurface2 = TTF_RenderText_Solid(font, transfer.firstOrder.denominator.c_str(), textColor);
+        denominatorTexture2 = SDL_CreateTextureFromSurface(renderer, denominatorSurface2);
+    }
+    else if (transfer.order == 4)
+    {
+        numeratorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.numerator.c_str(), textColor);
+        numeratorTexture1 = SDL_CreateTextureFromSurface(renderer, numeratorSurface1);
+        denominatorSurface1 = TTF_RenderText_Solid(font, transfer.secondOrder1.denominator.c_str(), textColor);
+        denominatorTexture1 = SDL_CreateTextureFromSurface(renderer, denominatorSurface1);
+        numeratorSurface2 = TTF_RenderText_Solid(font, transfer.secondOrder2.numerator.c_str(), textColor);
+        numeratorTexture2 = SDL_CreateTextureFromSurface(renderer, numeratorSurface2);
+        denominatorSurface2 = TTF_RenderText_Solid(font, transfer.secondOrder2.denominator.c_str(), textColor);
+        denominatorTexture2 = SDL_CreateTextureFromSurface(renderer, denominatorSurface2);
+    }
 
     // Create H(s) text surface and texture
     font = TTF_OpenFont("./Libraries used/Roboto_Mono/RobotoMono-VariableFont_wght.ttf", 24);
     SDL_Surface* hsSurface = TTF_RenderText_Solid(font, "H(s) = ", textColor);
     SDL_Texture* hsTexture = SDL_CreateTextureFromSurface(renderer, hsSurface);
+    SDL_Surface* multiplierSurface = TTF_RenderText_Solid(font, " * ", textColor);
+    SDL_Texture* multiplierTexture = SDL_CreateTextureFromSurface(renderer, multiplierSurface);
 
     // Get window dimensions
     int winWidth, winHeight;
@@ -2068,53 +2110,129 @@ void drawGenerating(SDL_Window* window, SDL_Renderer* renderer, transferFunct tr
     SDL_QueryTexture(titleTexture, NULL, NULL, &titleWidth, &titleHeight);
 
     // Get numerator texture dimensions
-    int numWidth, numHeight;
-    SDL_QueryTexture(numeratorTexture, NULL, NULL, &numWidth, &numHeight);
+    int num1Width, num1Height;
+    SDL_QueryTexture(numeratorTexture1, NULL, NULL, &num1Width, &num1Height);
     // Get denominator texture dimensions
-    int denomWidth, denomHeight;
-    SDL_QueryTexture(denominatorTexture, NULL, NULL, &denomWidth, &denomHeight);
+    int denom1Width, denom1Height;
+    SDL_QueryTexture(denominatorTexture1, NULL, NULL, &denom1Width, &denom1Height);
+
+    int num2Width = 0, num2Height = 0;
+    int denom2Width = 0, denom2Height = 0;
+    int multiplierWidth = 0, multiplierHeight = 0;
+    if (transfer.order == 3 || transfer.order == 4)
+    {
+        // Get numerator texture dimensions
+        SDL_QueryTexture(numeratorTexture2, NULL, NULL, &num2Width, &num2Height);
+        // Get denominator texture dimensions
+        SDL_QueryTexture(denominatorTexture2, NULL, NULL, &denom2Width, &denom2Height);
+        // Get multiplier texture dimensions
+        SDL_QueryTexture(multiplierTexture, NULL, NULL, &multiplierWidth, &multiplierHeight);
+    }
+
     // Get H(s) texture dimensions
     int hsWidth, hsHeight;
     SDL_QueryTexture(hsTexture, NULL, NULL, &hsWidth, &hsHeight);
 
-    int transferWidth = denominatorSurface->w;
-    int transferHeight = denominatorSurface->h;
-
     // Calculate the total width of the transfer function and H(s) part
-    int transferFunctionWidth = std::max(numWidth, denomWidth);
-    int statementWidth = transferFunctionWidth + hsWidth + 12; // Add the width of H(s) and some padding
+    int transferFunction1Width = std::max(num1Width, denom1Width);
+    int transferFunction2Width = std::max(num2Width, denom2Width);
+    int statementWidth = transferFunction1Width + hsWidth + 12; // Add the width of H(s) and some padding
+    if (transfer.order == 3 || transfer.order == 4)
+    {
+        statementWidth += transferFunction2Width + multiplierWidth;
+    }
 
-    // Calculate the total height of the transfer function and numerator/denominator
-    int transferFunctionHeight = transferHeight; // Add some padding
-    int statementHeight = transferFunctionHeight + std::max(numHeight, denomHeight);
+    int transferFunction1Height = num1Height + denom1Height;
 
     // Position Rectangles in a way that centers the entire statement under the title
     SDL_Rect titleRect = { (winWidth - titleWidth) / 2, (winHeight - titleHeight) / 2 - 150, titleWidth, titleHeight };
-    SDL_Rect hsRect = { (winWidth - statementWidth) / 2, titleRect.y + titleRect.h + 80, hsWidth, hsHeight };
-    SDL_Rect transferRect = { hsRect.x + hsWidth + 12, hsRect.y, transferFunctionWidth, transferFunctionHeight };
-    SDL_Rect numeratorRect = { transferRect.x + (transferRect.w - numWidth) / 2, transferRect.y - numHeight + 12, numWidth, numHeight };
-    SDL_Rect denominatorRect = { transferRect.x + (transferRect.w - denomWidth) / 2, transferRect.y + transferRect.h - 12, denomWidth, denomHeight };
+    SDL_Rect hsRect = { (winWidth - statementWidth) / 2, titleRect.y + titleRect.h + 100, hsWidth, hsHeight };
+    // Adjust Y parameter for transferRect1 to be in the center of hsRect
+    SDL_Rect transferRect1 = { hsRect.x + hsWidth + 12, hsRect.y + hsHeight / 2 + 3, transferFunction1Width, 1 };
+    SDL_Rect numeratorRect1 = { transferRect1.x + (transferRect1.w - num1Width) / 2, transferRect1.y - num1Height - 3, num1Width, num1Height };
+    SDL_Rect denominatorRect1 = { transferRect1.x + (transferRect1.w - denom1Width) / 2, transferRect1.y + 3, denom1Width, denom1Height };
+
+    SDL_Rect transferRect2 = { 0, 0, 0, 0 };
+    SDL_Rect numeratorRect2 = { 0, 0, 0, 0 };
+    SDL_Rect denominatorRect2 = { 0, 0, 0, 0 };
+    SDL_Rect multiplierRect = { 0, 0, 0, 0 };
+
+    if (transfer.order == 3 || transfer.order == 4)
+    {
+        multiplierRect.x = transferRect1.x + transferRect1.w + 6;
+        multiplierRect.y = transferRect1.y + (transferRect1.h - multiplierHeight) / 2;
+        multiplierRect.w = multiplierWidth;
+        multiplierRect.h = multiplierHeight;
+
+        transferRect2.x = multiplierRect.x + multiplierRect.w + 6;
+        transferRect2.y = transferRect1.y;
+        transferRect2.w = transferFunction2Width;
+        transferRect2.h = transferRect1.h;
+
+        numeratorRect2.x = transferRect2.x + (transferRect2.w - num2Width) / 2;
+        numeratorRect2.y = numeratorRect1.y;
+        numeratorRect2.w = num2Width;
+        numeratorRect2.h = num2Height;
+
+        denominatorRect2.x = transferRect2.x + (transferRect2.w - denom2Width) / 2;
+        denominatorRect2.y = transferRect2.y + 3;
+        denominatorRect2.w = denom2Width;
+        denominatorRect2.h = denom2Height;
+    }
+
+    // Clear the renderer
+    SDL_RenderClear(renderer);
 
     // Draw title texture in the center of the screen
     SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
 
     // Draw numerator texture below the title
-    SDL_RenderCopy(renderer, numeratorTexture, NULL, &numeratorRect);
+    SDL_RenderCopy(renderer, numeratorTexture1, NULL, &numeratorRect1);
 
     // Draw denominator texture below the title
-    SDL_RenderCopy(renderer, denominatorTexture, NULL, &denominatorRect);
+    SDL_RenderCopy(renderer, denominatorTexture1, NULL, &denominatorRect1);
 
     // Draw a solid black line below the numerator
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderDrawLine(renderer, transferRect.x, transferRect.y + transferHeight / 2, transferRect.x + transferWidth, transferRect.y + transferHeight / 2);
+    SDL_RenderDrawLine(renderer, transferRect1.x, transferRect1.y, transferRect1.x + transferRect1.w, transferRect1.y);
+    SDL_RenderDrawLine(renderer, transferRect2.x, transferRect2.y, transferRect2.x + transferRect2.w, transferRect2.y);
 
     // Draw H(s) texture between denom and num
     SDL_RenderCopy(renderer, hsTexture, NULL, &hsRect);
 
+    if (transfer.order == 3 || transfer.order == 4)
+    {
+        // Draw numerator texture below the transfer function
+        SDL_RenderCopy(renderer, numeratorTexture2, NULL, &numeratorRect2);
+
+        // Draw denominator texture below the transfer function
+        SDL_RenderCopy(renderer, denominatorTexture2, NULL, &denominatorRect2);
+
+        // Draw multiplier texture
+        SDL_RenderCopy(renderer, multiplierTexture, NULL, &multiplierRect);
+    }
+
     // Update the renderer
     SDL_RenderPresent(renderer);
 
+    // Clean up resources
+    SDL_FreeSurface(titleSurface);
+    SDL_DestroyTexture(titleTexture);
+    SDL_FreeSurface(numeratorSurface1);
+    SDL_DestroyTexture(numeratorTexture1);
+    SDL_FreeSurface(denominatorSurface1);
+    SDL_DestroyTexture(denominatorTexture1);
+    SDL_FreeSurface(numeratorSurface2);
+    SDL_DestroyTexture(numeratorTexture2);
+    SDL_FreeSurface(denominatorSurface2);
+    SDL_DestroyTexture(denominatorTexture2);
+    SDL_FreeSurface(hsSurface);
+    SDL_DestroyTexture(hsTexture);
+    SDL_FreeSurface(multiplierSurface);
+    SDL_DestroyTexture(multiplierTexture);
+    TTF_CloseFont(font);
 }
+
 
 void handleTextInputEvent(const SDL_Event& event, std::string& inputText)
 {

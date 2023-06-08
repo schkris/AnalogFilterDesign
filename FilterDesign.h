@@ -2,10 +2,12 @@
 #include <cmath>
 #include "Common.h"
 
-struct complex
+const int DECIMAL_PLACES = 3;
+
+struct sepPoles
 {
-    double re;
-    double im;
+    std::vector<complex> conjugates;
+    std::vector<complex> standAlone;
 };
 
 transferFunct findTransferFunct();
@@ -22,16 +24,16 @@ void orderElipCalc();
 
 void roundOrder();
 
-std::string numButtTrans(double wc);
+transferFunct findButterTrans(double wc);
 
-std::string denomButtTrans(double wc);
+transferFunct findButtPoles(transferFunct transfer, double wc);
 
-void multiplyPoles(std::vector<complex> poles);
+transferFunct findCheb1Trans();
 
-std::string numCheby1Trans(double wc);
+transferFunct findCheb1Poles(transferFunct transfer);
 
-std::string denomCheby1Trans(double wc);
+transferFunct findCheb2Trans();
 
-std::string numCheby2Trans(double wc);
+transferFunct findCheb2Poles(transferFunct transfer);
 
-std::string denomCheby2Trans(double wc);
+sepPoles findConjugates(transferFunct transfer);

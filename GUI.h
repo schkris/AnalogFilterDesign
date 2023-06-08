@@ -5,7 +5,7 @@
 #include <SDL_ttf.h>
 #include <mutex>
 
-const int WINDOW_WIDTH = 1200;
+const int WINDOW_WIDTH = 1400;
 const int WINDOW_HEIGHT = 1000;
 const int DELAY_TIME = 16;
 
